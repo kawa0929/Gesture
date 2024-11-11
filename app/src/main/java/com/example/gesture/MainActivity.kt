@@ -27,11 +27,16 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.foundation.layout.offset
 
-
-
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource.Companion.Drag
 
 
 class MainActivity : ComponentActivity() {
@@ -43,12 +48,17 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     /*PointerEvents()*/
                     Tap()
+                    Drag()
+                    Drag_Horizontal()
+                    Drag_Vertical()
 
                 }
             }
         }
     }
 }
+
+
 
 @Composable
 fun PointerEvents() {
@@ -78,19 +88,19 @@ fun Tap() {
     var count by remember { mutableStateOf(0) }
     var offset1 by remember { mutableStateOf(Offset.Zero) }
     var offset2 by remember { mutableStateOf(Offset.Zero) }
-    var PU = arrayListOf(R.drawable.pu0, R.drawable.pu1,
+    var PU = arrayListOf(
+        R.drawable.pu0, R.drawable.pu1,
         R.drawable.pu2, R.drawable.pu3,
-        R.drawable.pu4, R.drawable.pu5)
+        R.drawable.pu4, R.drawable.pu5
+    )
     var Number by remember { mutableStateOf(3) }
-
-
 
 
     Column {
         Text("\n" + msg + "\n計數:" + count.toString(),
             Modifier.pointerInput(Unit) {
                 detectTapGestures(
-                    onPress = {count = 0}
+                    onPress = { count = 0 }
                 )
             }
         )
@@ -99,10 +109,11 @@ fun Tap() {
             .fillMaxWidth()
             .pointerInput(Unit) {
                 detectDragGesturesAfterLongPress(
-                    onDrag = { change, dragAmount -> offset2+=dragAmount},
+                    onDrag = { change, dragAmount -> offset2 += dragAmount },
                     onDragStart = {
                         offset1 = it
-                        offset2 = it },
+                        offset2 = it
+                    },
                     onDragEnd = {
                         if (offset2.x >= offset1.x) {
                             msg = "長按後向右拖曳"
@@ -117,11 +128,11 @@ fun Tap() {
                                 Number = 5
                             }
                         }
-                    }
-                        )
-                    }
+                    },
+                )
+            }
 
-        ){
+        ) {
             Text("")
         }
 
@@ -133,18 +144,76 @@ fun Tap() {
                 .fillMaxSize()
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onTap = {msg = "後觸發onTap(短按)"
-                                count++},
-                        onDoubleTap = {msg = "雙擊"
-                                      count+=3},
-                        onLongPress = {msg = "長按"},
-                        onPress = {msg = "先觸發onPress(按下)"}
-        )
+                        onTap = {
+                            msg = "後觸發onTap(短按)"
+                            count++
+                        },
+                        onDoubleTap = {
+                            msg = "雙擊"
+                            count += 3
+                        },
+                        onLongPress = { msg = "長按" },
+                        onPress = { msg = "先觸發onPress(按下)" }
+                    )
 
 
                 }
 
         )
-
     }
 }
+
+
+
+@Composable
+fun Drag_Vertical() {
+    var offsetY by remember { mutableStateOf(0f) }
+    Text(
+        text = "垂直拖曳",
+        modifier = Modifier
+            .offset { IntOffset(600, offsetY.toInt() + 100) }
+            .draggable(
+                orientation = Orientation.Vertical,
+                state = rememberDraggableState { delta ->
+                    offsetY += delta
+                }
+            )
+    )}
+
+@Composable
+fun Drag_Horizontal() {
+    var offsetX by remember { mutableStateOf(0f) }
+    Text(
+        text = "水平拖曳",
+        modifier = Modifier
+            .offset { IntOffset(offsetX.toInt(), 200) }
+            .draggable(
+                orientation = Orientation.Horizontal,
+                state = rememberDraggableState { delta ->
+                    offsetX += delta
+                }
+            )
+    )
+}
+
+
+@Composable
+fun Drag() {
+    var offset1 by remember { mutableStateOf(Offset.Zero) }
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier
+            .offset { IntOffset(offset1.x.toInt(), offset1.y.toInt()) }
+            .pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    offset1 += dragAmount
+                }
+            }
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ghost1),
+                contentDescription = "精靈1",
+            )
+        }
+    }
+}
+
